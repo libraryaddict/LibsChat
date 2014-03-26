@@ -1,0 +1,7 @@
+name: LibsChat
+main: me.libraryaddict.Chat.Main
+author: libraryaddict
+version: 1.5
+commands:
+  channel:
+    aliases: [chat, channels]

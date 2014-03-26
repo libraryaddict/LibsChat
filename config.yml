@@ -1,0 +1,72 @@
+# Uncomment this to enable.
+# Means everyone starts in this channel. Doesn't care if they have the permission node.
+
+# DefaultChannel: Default
+
+Channels:
+  # Add channels here.
+  # This channel is called Default
+  Default:
+    # Remove the options you don't want. For perms, that means they don't need it.
+    # Just don't remove display names. Toggle it on and off.
+    # If they have this permission. They can join the channel
+    PermissionToJoin: 'channel.default.join'    
+    # If they have this permission. They can leave the channel
+    PermissionToLeave: 'channel.default.leave'
+    # If they have this permission. They can hear the channel even if they are not in it
+    PermissionToHear: 'channel.default.hear'
+    # The format of the channels text. Uncomment to use the one they were talking in.
+    Format: '<%Name%> %Message%'
+    # Shall the players fake names be used. (Includes colored names)
+    DisplayNames: true
+
+# This makes a new command which makes the user do the 2nd command.  
+# This can be used for other stuff outside of this plugin.
+# Don't use a / unless its for something like WorldEdit which has //superpickaxe
+BindCommands:
+  # Here I'm making them join the channel default.
+  # Careful about making duplicate commands. They override each other.
+  default: channel join default
+
+# Here is the shortcuts..
+# You can use these by instead of being forced to switch channels.
+# You can use "@Hello default channel!"
+# You need the permission. Remove the permission to make it default to all.
+ChannelShortcuts:
+  # Shortcut. This one means you need to prefix your chat with @
+  # This also works for commands. Such as '/report '
+  # You will want to do that extra space after the command.
+  # Remember to enclose it in single quotes.
+  '@':
+    # The channel they will talk in
+    ChannelName: Default
+    # The permission they need to talk in there.
+    # This doesn't let them hear it! Thats the channel permission.
+    # If they don't have permission to hear it. They will think they said nothing.
+    Permission: channel.default.talk
+    # So to counter the top. If this is true. Send them this message.
+    # Delete this to make it no message sent.
+    Message: '&cMessage sent!'
+# Here I set the commands.
+# As always. Comment em out to remove.
+# Remember to update BindCommands if you change the channel command
+Commands:
+  Channel:
+    Command: channel
+    Aliases: 
+      - chat
+      - channels
+  Message:
+    Command: message
+    Aliases: 
+      - msg
+      - tell
+      - pm
+      - whisper
+      - w
+      - privatemessage
+  Reply:
+    Command: reply
+    Aliases:
+      - r
+      - respond
