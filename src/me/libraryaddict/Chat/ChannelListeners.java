@@ -77,7 +77,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         }
         if (channel != null) {
             event.setCancelled(true);
-            if (event.getMessage().split(" ").length <= 0) {
+            if (event.getMessage().trim().length() <= 0) {
                 event.getPlayer().sendMessage(ChatColor.RED + "You cannot send a empty message");
                 return;
             }
