@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.util.HashSet;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -24,36 +26,22 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         this.main = main;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
-        Main.ChannelShortcut shortcut = main.getShortcut(event.getMessage());
-        if (shortcut != null && !event.isCancelled()) {
-            event.setCancelled(true);
-            if (shortcut.getPermission() != null && !event.getPlayer().hasPermission(shortcut.getPermission())) {
-                event.getPlayer().sendMessage(ChatColor.RED + "You do not have access to this channel!");
-                return;
-            }
-            event.setMessage(event.getMessage().substring(shortcut.getKey().length()));
-            if (event.getMessage().length() == 0) {
-                event.getPlayer().sendMessage(ChatColor.RED + "Message not long enough!");
-                return;
-            }
-            chatChannel(shortcut.getChannel(), event.getPlayer(), "<%s> %s", event.getMessage(), shortcut.getMessage());
-        }
-    }
-
     private void chatChannel(ChatChannel channel, Player player, String format, String message, String shortcutMessage) {
         String sender = (channel.useDisplayNames() ? player.getDisplayName() : player.getName());
         format = (channel.getFormat() != null ? channel.getFormat() : format);
-        sendData(channel.getName(), sender, format, message);
-        message = format.replaceFirst("%s", sender).replaceFirst("%s", message);
+        if (channel.isCrossServer()) {
+            sendData(channel.getName(), sender, format, message);
+        }
+        message = String.format(format, sender, message);
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (main.getChatChannel(p) == channel
-                    || (channel.useHearPermission() && p.hasPermission(channel.getPermissionToHear()))) {
-                p.sendMessage(message);
-            } else {
-                if (p == player && shortcutMessage != null) {
-                    p.sendMessage(shortcutMessage);
+            if (channel.getRadius() < 0 || p.getLocation().distance(player.getLocation()) <= channel.getRadius()) {
+                if (main.getChatChannel(p) == channel
+                        || (channel.useHearPermission() && p.hasPermission(channel.getPermissionToHear()))) {
+                    p.sendMessage(message);
+                } else {
+                    if (p == player && shortcutMessage != null) {
+                        p.sendMessage(shortcutMessage);
+                    }
                 }
             }
         }
@@ -62,7 +50,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onChat(PlayerChatEvent event) {
-        if (event.isCancelled())
+        if (event.isCancelled() || event.getRecipients().isEmpty())
             return;
         ChatChannel channel = main.getChatChannel(event.getPlayer());
         Main.ChannelShortcut shortcut = main.getShortcut(event.getMessage());
@@ -83,6 +71,28 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             }
             chatChannel(channel, event.getPlayer(), event.getFormat(), event.getMessage(),
                     shortcut != null && shortcut.getChannel() == channel ? shortcut.getMessage() : null);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        Main.ChannelShortcut shortcut = main.getShortcut(event.getMessage());
+        if (shortcut != null && !event.isCancelled()) {
+            event.setCancelled(true);
+            if (shortcut.getPermission() != null && !event.getPlayer().hasPermission(shortcut.getPermission())) {
+                event.getPlayer().sendMessage(ChatColor.RED + "You do not have access to this channel!");
+                return;
+            }
+            String msg = event.getMessage().substring(shortcut.getKey().length());
+            if (msg.length() == 0) {
+                event.getPlayer().sendMessage(ChatColor.RED + "You cannot send a empty message!");
+                return;
+            }
+            PlayerChatEvent chatEvent = new PlayerChatEvent(event.getPlayer(), msg, "<%s> %s", new HashSet());
+            Bukkit.getPluginManager().callEvent(chatEvent);
+            if (!chatEvent.isCancelled()) {
+                chatChannel(shortcut.getChannel(), event.getPlayer(), "<%s> %s", chatEvent.getMessage(), shortcut.getMessage());
+            }
         }
     }
 
@@ -115,8 +125,8 @@ public class ChannelListeners implements Listener, PluginMessageListener {
                     String format = msgin.readUTF();
                     String message = msgin.readUTF();
                     for (ChatChannel channel : main.getChannels()) {
-                        if (channel.getName().equals(channelName)) {
-                            String chatMessage = format.replaceFirst("%s", sender).replaceFirst("%s", message);
+                        if (channel.getName().equals(channelName) && channel.isCrossServer()) {
+                            String chatMessage = String.format(format, sender, message);
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 if (main.getChatChannel(player) == channel
                                         || (channel.useHearPermission() && player.hasPermission(channel.getPermissionToHear()))) {

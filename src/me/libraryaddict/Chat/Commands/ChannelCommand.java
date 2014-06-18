@@ -14,8 +14,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class ChannelCommand implements CommandExecutor {
-    private Main main;
     private String commandName;
+    private Main main;
 
     public ChannelCommand(Main main, String commandName) {
         this.main = main;

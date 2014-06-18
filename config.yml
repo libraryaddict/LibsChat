@@ -19,6 +19,11 @@ Channels:
     Format: '<%Name%> %Message%'
     # Shall the players fake names be used. (Includes colored names)
     DisplayNames: true
+    # Set this to true or just remove it to have this channel work across servers
+    CrossServer: false
+    # The radius people can speak to each other in chat. This only applies to the same server.
+    # If a radius exists, then it will not work cross server.
+    Radius: 100
 
 # This makes a new command which makes the user do the 2nd command.  
 # This can be used for other stuff outside of this plugin.
