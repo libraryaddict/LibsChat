@@ -66,25 +66,25 @@ public class ChatManager implements PluginMessageListener {
             in.readFully(msgbytes);
             DataInputStream msgin = new DataInputStream(new ByteArrayInputStream(msgbytes));
             if (subchannel.equals("LibrarysMessage")) {
-                long timestamp = msgin.readLong();
-                if (timestamp >= System.currentTimeMillis()) {
-                    boolean isMessage = msgin.readBoolean();
-                    String sender = msgin.readUTF();
-                    String receiver = msgin.readUTF();
-                    String message = msgin.readUTF();
-                    CommandSender player = getSender(isMessage ? receiver : sender, false);
-                    if (player != null) {
-                        lastMsg.put(player.getName(), isMessage ? sender : receiver);
-                        if (isMessage) {
-                            player.sendMessage(msgin.readUTF());
-                            sendConfirmation(sender, player.getName(), message.replaceFirst("%s",
-                                    player instanceof Player ? ((Player) player).getDisplayName() : player.getName()));
-                        } else {
-                            // Confirmed the message has been sent
-                            if (noReplies.containsKey(player))
-                                noReplies.remove(player).cancel();
-                            player.sendMessage(message);
-                        }
+                boolean isMessage = msgin.readBoolean();
+                String sender = msgin.readUTF();
+                String receiver = msgin.readUTF();
+                String message = msgin.readUTF();
+                CommandSender player = getSender(isMessage ? receiver : sender, false);
+                if (player != null) {
+                    lastMsg.put(player.getName(), isMessage ? sender : receiver);
+                    if (isMessage) {
+                        player.sendMessage(msgin.readUTF());
+                        sendConfirmation(
+                                sender,
+                                player.getName(),
+                                message.replaceFirst("%s",
+                                        player instanceof Player ? ((Player) player).getDisplayName() : player.getName()));
+                    } else {
+                        // Confirmed the message has been sent
+                        if (noReplies.containsKey(player))
+                            noReplies.remove(player).cancel();
+                        player.sendMessage(message);
                     }
                 }
             }
@@ -101,7 +101,6 @@ public class ChatManager implements PluginMessageListener {
         try {
             ByteArrayOutputStream msgbytes = new ByteArrayOutputStream();
             DataOutputStream msgout = new DataOutputStream(msgbytes);
-            msgout.writeLong(System.currentTimeMillis() + 1000);
             msgout.writeBoolean(false);
             msgout.writeUTF(sender);
             msgout.writeUTF(receiver);
@@ -110,7 +109,7 @@ public class ChatManager implements PluginMessageListener {
             DataOutputStream out = new DataOutputStream(b);
 
             out.writeUTF("Forward");
-            out.writeUTF("ALL");
+            out.writeUTF("ONLINE");
             out.writeUTF("LibrarysMessage");
             out.writeShort(msgbytes.toByteArray().length);
             out.write(msgbytes.toByteArray());
@@ -124,7 +123,6 @@ public class ChatManager implements PluginMessageListener {
         try {
             ByteArrayOutputStream msgbytes = new ByteArrayOutputStream();
             DataOutputStream msgout = new DataOutputStream(msgbytes);
-            msgout.writeLong(System.currentTimeMillis() + 1000);
             msgout.writeBoolean(true);
             msgout.writeUTF(sender);
             msgout.writeUTF(receiver);
@@ -134,7 +132,7 @@ public class ChatManager implements PluginMessageListener {
             DataOutputStream out = new DataOutputStream(b);
 
             out.writeUTF("Forward");
-            out.writeUTF("ALL");
+            out.writeUTF("ONLINE");
             out.writeUTF("LibrarysMessage");
             out.writeShort(msgbytes.toByteArray().length);
             out.write(msgbytes.toByteArray());

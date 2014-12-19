@@ -50,7 +50,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onChat(PlayerChatEvent event) {
-        if (event.isCancelled() || event.getRecipients().isEmpty())
+        if (event.isCancelled())
             return;
         ChatChannel channel = main.getChatChannel(event.getPlayer());
         Main.ChannelShortcut shortcut = main.getShortcut(event.getMessage());
@@ -118,23 +118,20 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             in.readFully(msgbytes);
             DataInputStream msgin = new DataInputStream(new ByteArrayInputStream(msgbytes));
             if (subchannel.equals("LibrarysChat")) {
-                long timestamp = msgin.readLong();
-                if (timestamp >= System.currentTimeMillis()) {
-                    String channelName = msgin.readUTF();
-                    String sender = msgin.readUTF();
-                    String format = msgin.readUTF();
-                    String message = msgin.readUTF();
-                    for (ChatChannel channel : main.getChannels()) {
-                        if (channel.getName().equals(channelName) && channel.isCrossServer()) {
-                            String chatMessage = String.format(format, sender, message);
-                            for (Player player : Bukkit.getOnlinePlayers()) {
-                                if (main.getChatChannel(player) == channel
-                                        || (channel.useHearPermission() && player.hasPermission(channel.getPermissionToHear()))) {
-                                    player.sendMessage(chatMessage);
-                                }
+                String channelName = msgin.readUTF();
+                String sender = msgin.readUTF();
+                String format = msgin.readUTF();
+                String message = msgin.readUTF();
+                for (ChatChannel channel : main.getChannels()) {
+                    if (channel.getName().equals(channelName) && channel.isCrossServer()) {
+                        String chatMessage = String.format(format, sender, message);
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (main.getChatChannel(player) == channel
+                                    || (channel.useHearPermission() && player.hasPermission(channel.getPermissionToHear()))) {
+                                player.sendMessage(chatMessage);
                             }
-                            break;
                         }
+                        break;
                     }
                 }
             }
@@ -157,12 +154,11 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(b);
             out.writeUTF("Forward");
-            out.writeUTF("ALL");
+            out.writeUTF("ONLINE");
             out.writeUTF("LibrarysChat");
 
             ByteArrayOutputStream msgbytes = new ByteArrayOutputStream();
             DataOutputStream msgout = new DataOutputStream(msgbytes);
-            msgout.writeLong(System.currentTimeMillis() + 1000);
             msgout.writeUTF(channel);
             msgout.writeUTF(sender);
             msgout.writeUTF(format);
